@@ -1,0 +1,47 @@
+# Default parameter configuration for running Retrieval-Augmented Generation
+
+## Database
+
+# Text splitter parameters
+chunk_size: 1000
+chunk_overlap: 200
+
+## Query
+
+# Hugging face instructor embeddings
+model_name: "hkunlp/instructor-xl"
+model_kwargs:
+  "device": "cuda"
+
+# ChromaDB retriever
+search_type: "mmr"
+search_kwargs:
+  "k": 3 # number of documents to return (sources/citations)
+  "fetch_k": 50 # number of documents to pass to db search algorithm (MMR)
+
+# Model
+# Change to path to0 downloaded model
+model_id: "meta-llama/Llama-2-7b-chat-hf"
+
+# LM input
+load_in_8bit: True
+lm_device_map: "auto"
+
+# Prompt pipeline (summary)
+pipeline_device_map: "auto"
+max_new_tokens: 512
+
+# Question generation
+q_device_map: "auto"
+q_max_length: 500
+
+# Response generation
+timeout: 10.
+skip_prompt: True
+skip_special_tokens: True
+r_device_map: "auto"
+r_max_length: 2000
+return_source_documents: True
+
+# Chatbox width
+width: 110
