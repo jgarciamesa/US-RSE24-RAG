@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/839083910.svg)](https://zenodo.org/doi/10.5281/zenodo.13328765)
+
 # Enhancing the application of large language models with retrieval-augmented generation for a research community -- SuperComputing 2024
 
 Supplement for an accepted paper in [SuperComputing24](https://sc24.supercomputing.org/),
