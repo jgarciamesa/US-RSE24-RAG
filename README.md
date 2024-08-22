@@ -186,7 +186,7 @@ This file is YAML formatted, more information [here](https://yaml.org/).
 
 Important parameters include:
 
-- LLM: `model_id`, default is **Llama-2 13b**.
+- LLM: `model_id`, default is **Llama-3 8b**.
 - Search model: `search_type`, default is [**MMR algorithm**](https://python.langchain.com/docs/modules/model_io/prompts/example_selector_types/mmr).
 - Amount of sources per query: `search_kwargs["k"]`, default is **5**.
 - Amount of documents to pass to the search model, default is **50**.
@@ -200,8 +200,10 @@ Important parameters include:
 
 | Model Name   | Original Model | `dtype=bfloat16` | `load_in_8bits=True` |
 |--------------|----------------|------------------|----------------------|
-| Llama-2 7b   | 26 GiB          | 13 GiB          | 7 GiB                |
-| Llama-2 13b  | 49 GiB          | 24 GiB          | 13 GiB               |
-| Llama-2 70b  | 257 GiB         | 128 GiB         | 67 GiB               |
-| Falcon 180b  | 360 GiB         | 180 GiB         | 90 GiB               |
+| Llama-2 7b   | 26 GiB         | 13 GiB           | 7 GiB                |
+| Llama-2 13b  | 49 GiB         | 24 GiB           | 13 GiB               |
+| Llama-2 70b  | 257 GiB        | 128 GiB          | 67 GiB               |
+| Falcon 180b  | 360 GiB        | 180 GiB          | 90 GiB               |
+| Llama-3 8b   | 32 GiB         | 16 GiB           | 8 GiB                |
+| Llama-8 70b  | 280 GiB        | 140 GiB          | 70 GiB               |
 

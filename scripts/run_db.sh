@@ -6,6 +6,6 @@
 
 #set up the environment
 module load mamba/latest
-source activate genai
+source activate genai23.10
 
-python scripts/create_db.py example/llm_papers example/llm_db scripts/config.yaml
+python scripts/create_db.py <data_directory> <db_directory> [config_file]

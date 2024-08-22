@@ -1,6 +1,6 @@
 """Create a ChromaDB given a set of input text files.
- Multiple files
- Multiple file formats (PDF, TXT, CSV)
+ Multiple Files
+ Multiple File Formats (PDF, TXT, CSV)
  ChromaDB
 """
 
@@ -10,7 +10,6 @@ import zipfile
 import tempfile
 import urllib.request
 from tqdm import tqdm
-
 from langchain.vectorstores import Chroma
 from langchain.document_loaders import CSVLoader
 from langchain.document_loaders import TextLoader
@@ -19,8 +18,7 @@ from langchain.document_loaders import DirectoryLoader
 from langchain.document_loaders import MergedDataLoader
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-from utils import load_config, set_progress
+from query import load_config, set_progress
 
 # add the directory for locally hosted models
 # os.environ["HUGGINGFACE_HUB_CACHE"] = "/path/to/huggingface_cache"

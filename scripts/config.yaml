@@ -1,12 +1,12 @@
 # Default parameter configuration for running Retrieval-Augmented Generation
 
-## Database
+## Database ##
 
 # Text splitter parameters
 chunk_size: 1000
 chunk_overlap: 200
 
-## Query
+## Query ##
 
 # Hugging face instructor embeddings
 model_name: "hkunlp/instructor-xl"
@@ -15,33 +15,48 @@ model_kwargs:
 
 # ChromaDB retriever
 search_type: "mmr"
+#  k is the amount of documents to return (sources/citations)
+#  fetch_k is the amount of documents to pass to MMR algorithm
 search_kwargs:
-  "k": 3 # number of documents to return (sources/citations)
-  "fetch_k": 50 # number of documents to pass to db search algorithm (MMR)
+  "k": 5
+  "fetch_k": 50
 
 # Model
-# Change to path to0 downloaded model
-model_id: "meta-llama/Llama-2-7b-chat-hf"
+# Replace model_id with path to local model or Hugging Face model ID
+#
+# model_id: "meta-llama/Llama-2-7b-chat-hf"
+# model_id: "meta-llama/Llama-2-13b-chat-hf"
+# model_id: "meta-llama/Llama-2-70b-chat-hf"
+model_id: "meta-llama/Meta-Llama-3-8B-Instruct"
+# model_id: "meta-llama/Meta-Llama-3-70B-Instruct"
+
+# Information about model max tokens
+#  max tokens >= max_new_tokens + q_max_length + r_max_length
+#
+#  Llama-2 (7b ,13b ,70b) -> 4096
+#  Falcon  (7b, 40b) ------> 2048
+#  Falcon  (180b) ---------> 8192
+#  Llama-3 (8b, 70b) ------> 8192
 
 # LM input
-load_in_8bit: True
+load_in_8bit: False
 lm_device_map: "auto"
 
 # Prompt pipeline (summary)
 pipeline_device_map: "auto"
-max_new_tokens: 512
+max_new_tokens: 2048
 
 # Question generation
 q_device_map: "auto"
-q_max_length: 500
+q_max_length: 2048
 
 # Response generation
 timeout: 10.
 skip_prompt: True
 skip_special_tokens: True
 r_device_map: "auto"
-r_max_length: 2000
+r_max_length: 4096
 return_source_documents: True
 
-# Chatbox width
+# Citing sources
 width: 110

@@ -5,9 +5,9 @@
 import os
 import sys
 import textwrap
+import yaml
 import torch
 from tqdm import tqdm
-
 from langchain.vectorstores import Chroma
 from langchain.chains.llm import LLMChain
 from langchain.prompts import PromptTemplate
@@ -19,8 +19,8 @@ from langchain.chains.conversation.memory import ConversationSummaryMemory
 from transformers import LlamaTokenizer, LlamaForCausalLM
 from transformers import AutoTokenizer, FalconForCausalLM
 from transformers import TextIteratorStreamer, pipeline
+from transformers import AutoModelForCausalLM
 
-import utils
 
 # add the directory for locally hosted models
 # os.environ["HUGGINGFACE_HUB_CACHE"] = "/path/to/huggingface_cache"
@@ -96,7 +96,8 @@ def load_llm(config):
     """
     model_id = os.environ["HUGGINGFACE_HUB_CACHE"] + "/" + config["model_id"]
 
-    if "llama" in model_id.lower():
+    if "llama2" in config["model_id"].lower():
+        print(f'Using model {config["model_id"]}')
         tokenizer = LlamaTokenizer.from_pretrained(model_id)
         model = LlamaForCausalLM.from_pretrained(
             model_id,
@@ -105,6 +106,7 @@ def load_llm(config):
             device_map=config["lm_device_map"],
         )
     elif "falcon" in model_id.lower():
+        print(f'Using model {config["model_id"]}')
         tokenizer = AutoTokenizer.from_pretrained(model_id)
         model = FalconForCausalLM.from_pretrained(
             model_id,
@@ -112,8 +114,20 @@ def load_llm(config):
             load_in_8bit=config["load_in_8bit"],
             device_map=config["lm_device_map"],
         )
+    elif "llama3" in config["model_id"].lower():
+        print(f'Using model {config["model_id"]}')
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            torch_dtype=torch.bfloat16,
+            load_in_8bit=config["load_in_8bit"],
+            device_map=config["lm_device_map"],
+        )
     else:
-        raise ValueError(f"Model '{model_id}' is not currently supported")
+        raise ValueError(
+            f"Model in {config['model_id']} not supported, must be Llama-2"
+            "Falcon, or Llama-3"
+        )
 
     return model, tokenizer
 
@@ -134,9 +148,11 @@ def read_db(db, config):
         db: Chroma database
         config: Configuration data with parameter values.
     """
+    # with HiddenPrints():
     instructor_embeddings = HuggingFaceInstructEmbeddings(
         model_name=config["model_name"], model_kwargs=config["model_kwargs"]
     )
+
     vectordb = Chroma(embedding_function=instructor_embeddings, persist_directory=db)
     retriever = vectordb.as_retriever(
         search_type=config["search_type"], search_kwargs=config["search_kwargs"]
@@ -152,13 +168,21 @@ def create_memory(model, tokenizer, config):
         tokenizer: Data structure containing tokenized text.
         config: Configuration data with parameter values.
     """
+    if "llama3" in config["model_id"].lower():
+        import utils_llama3 as utils
+    else:
+        import utils_llama2 as utils
+
     summary_pipe = pipeline(
         "text-generation",
         model=model,
         tokenizer=tokenizer,
         device_map=config["pipeline_device_map"],
         max_new_tokens=config["max_new_tokens"],
-        pad_token_id=tokenizer.eos_token_id,
+        eos_token_id=[
+            tokenizer.eos_token_id,
+            tokenizer.convert_tokens_to_ids("<|eot_id|>"),
+        ],
     )
     summary_llm = HuggingFacePipeline(pipeline=summary_pipe)
 
@@ -185,6 +209,12 @@ def qa_generator(model, tokenizer, config, retriever, ipynb=False):
         ipynb: Boolean to adjust return if functions is called from a jupyter
             notebook.
     """
+
+    if "llama3" in config["model_id"].lower():
+        import utils_llama3 as utils
+    else:
+        import utils_llama2 as utils
+
     condense_question_prompt = PromptTemplate(
         template=utils.CONDENSE_QUESTION_PROMPT_TEMPLATE,
         input_variables=["chat_history", "question"],
@@ -200,7 +230,10 @@ def qa_generator(model, tokenizer, config, retriever, ipynb=False):
         model=model,
         tokenizer=tokenizer,
         device_map=config["q_device_map"],
-        pad_token_id=tokenizer.eos_token_id,
+        eos_token_id=[
+            tokenizer.eos_token_id,
+            tokenizer.convert_tokens_to_ids("<|eot_id|>"),
+        ],
         max_length=config["q_max_length"],
     )
     question_generator_llm = HuggingFacePipeline(pipeline=question_generator_pipe)
@@ -220,7 +253,10 @@ def qa_generator(model, tokenizer, config, retriever, ipynb=False):
         model=model,
         tokenizer=tokenizer,
         device_map=config["r_device_map"],
-        pad_token_id=tokenizer.eos_token_id,
+        eos_token_id=[
+            tokenizer.eos_token_id,
+            tokenizer.convert_tokens_to_ids("<|eot_id|>"),
+        ],
         max_length=config["r_max_length"],
         streamer=streamer,
     )
@@ -256,22 +292,22 @@ def run_query(db, query_file, out_file, config_file):
 
     prog = tqdm(range(100), bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}")
 
-    utils.set_progress(prog, 0, "Loading configuration data")
-    config = utils.load_config(config_file)
+    set_progress(prog, 0, "Loading configuration data")
+    config = load_config(config_file)
 
-    utils.set_progress(prog, 1, "Reading database")
+    set_progress(prog, 1, "Reading database")
     retriever = read_db(db, config)
 
-    utils.set_progress(prog, 9, "Set up LLM")
+    set_progress(prog, 9, "Set up LLM")
     model, tokenizer = load_llm(config)
 
-    utils.set_progress(prog, 30, "Create memory")
+    set_progress(prog, 30, "Create memory")
     memory = create_memory(model, tokenizer, config)
 
-    utils.set_progress(prog, 5, "Set up prompt")
+    set_progress(prog, 5, "Set up prompt")
     qa_chain_with_memory = qa_generator(model, tokenizer, config, retriever)
 
-    utils.set_progress(prog, 25, "Querying the database")
+    set_progress(prog, 25, "Querying the database")
     with open(query_file, "r", encoding="utf-8") as file:
         questions = file.readlines()
         chunk = 30 / len(questions)
@@ -281,9 +317,33 @@ def run_query(db, query_file, out_file, config_file):
             response = qa_chain_with_memory(generate_kwargs)
             process_llm_response(response, config["width"], out_file)
             memory.save_context({"input": question}, {"output": response["answer"]})
-            utils.set_progress(prog, chunk, "Querying the database")
+            set_progress(prog, chunk, "Querying the database")
 
-    utils.set_progress(prog, 0, "All queries processed")
+    set_progress(prog, 0, "All queries processed")
+
+
+def load_config(yaml_path):
+    """Load YAML file with parameter values.
+
+    Args:
+        file_path: Path to configuration file (string).
+    """
+    with open(yaml_path, encoding="utf-8") as file_obj:
+        configuration = yaml.load(file_obj, Loader=yaml.SafeLoader)
+
+    return configuration
+
+
+def set_progress(pbar, update, description):
+    """Update tqdm bar progress and set description
+
+    Args:
+        bar: tqdm progress bar (tqdm object).
+        description: Description text (string).
+        update: update increase (int).
+    """
+    pbar.update(update)
+    pbar.set_description(description)
 
 
 if __name__ == "__main__":

@@ -6,6 +6,6 @@
 
 #set up the environment
 module load mamba/latest
-source activate genai
+source activate genai23.10
 
-python scripts/query.py example/llm_db example/questions.txt example/answers.txt scripts/config.yaml
+python scripts/query.py <db_directory> <questions_file> <responses_file> [config_file]
