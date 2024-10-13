@@ -1,7 +1,7 @@
-# Enhancing the application of large language models with retrieval-augmented generation for a research community -- SuperComputing 2024
+# Enhancing the application of large language models with retrieval-augmented generation for a research community -- US-RSE 2024
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13363087.svg)](https://doi.org/10.5281/zenodo.13363087)
 
-Supplement for an accepted paper in [SuperComputing24](https://sc24.supercomputing.org/),
+Supplement for an accepted paper in [US-RSE'24](https://us-rse.org/usrse24/),
 "Enhancing the application of large language models with retrieval-augmented generation for a research community".
 
 This repository provides instructions, scripts, notebook, and example data to run
